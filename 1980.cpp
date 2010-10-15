@@ -2,11 +2,11 @@
 #include <fstream>
 #include <sstream>
 #include <map>
+#include <cstdlib>
+#include <cstring>
 using namespace std;
 
-//#define DEBUG
-
-#ifdef DEBUG
+#ifdef DEBUG_BJ
 #define LOG(content)                            \
     do {                                        \
         stringstream ss;                        \
@@ -24,7 +24,7 @@ map<string, bool> FindSet;
 string ToString(int num, int arr[10])
 {
     stringstream ss;
-    sort(arr, arr+num);
+    //sort(arr, arr+num);
     for (int i = 0; i < num; ++i)
         ss << arr[i] << "-";
     return ss.str();
@@ -56,10 +56,10 @@ int GCD(int a, int b)
 
 int Eval(int p, int q, int level, int arr[10])
 {
-    LOG_CALL();
-    LOG(p << "/" << q << ", " << level);
-    for (int i = 0; i < level; ++i)
-        LOG(arr[i]);
+    //LOG_CALL();
+    //LOG(p << "/" << q << ", " << level);
+    //for (int i = 0; i < level; ++i)
+    //    LOG(arr[i]);
 
     if (level < 1)
         return 1;
@@ -75,10 +75,15 @@ int Eval(int p, int q, int level, int arr[10])
         up /= gcd;
     }
 
-    LOG("up: " << up << ", tp: " << tp);
+    //LOG("up: " << up << ", tp: " << tp);
 
     if (up == p && tp == q)
+    {
+        for (int i = 0; i < level; ++i)
+            LOG(arr[i]);
         return 0;
+    }
+
     double dest = (double)(p)/q;
     double curr = (double)(up)/tp;
     if (dest < curr)
@@ -88,38 +93,41 @@ int Eval(int p, int q, int level, int arr[10])
 
 void Search(int p, int q, int a, int n, int &c, int level, int start, int arr[10])
 {
-    LOG("level: " << level << ", start: " << start);
+    //LOG("level: " << level << ", start: " << start);
     int multiResult = 1;
     for (int i = 0; i < level; ++i)
         multiResult *= arr[i];
 
-    LOG("multiResult: " << multiResult);
-    for (int i = 0; i < level; ++i)
-        LOG(arr[i]);
+    //LOG("multiResult: " << multiResult);
+    //for (int i = 0; i < level; ++i)
+    //    LOG(arr[i]);
     
-    for (int i = start; ; --i)
+    for (int i = start; i > 0; --i)
     {
         if (multiResult * i > a)
             continue;
         arr[level] = i;
         int flag = Eval(p, q, level+1, arr);
-        LOG("Eval ret value: " << flag);
+        //LOG("Eval ret value: " << flag);
         bool out = false;
         string key;
         switch(flag)
         {
         case 0: /// equal
+            /*
             key = ToString(level+1, arr);
             if (FindSet.find(key) == FindSet.end())
             {
                 ++c;
                 FindSet[key] = true;
             }
+            */
+            ++c;
             out = true;
             break;
         case 1: /// less than p/q
             if (level+1 < n)
-                Search(p, q, a, n, c, level+1, a/(multiResult*i)+1, arr);
+                Search(p, q, a, n, c, level+1, i, arr);
             break;
         case 2: /// larger than p/q
             out = true;
@@ -128,6 +136,13 @@ void Search(int p, int q, int a, int n, int &c, int level, int start, int arr[10
         if (out)
             break;
     }
+}
+
+void PreProcess(int &a, int &b)
+{
+    int tmp = GCD(max(a, b), min(a, b));
+    a /= tmp;
+    b /= tmp;
 }
 
 int main(void)
@@ -142,6 +157,8 @@ int main(void)
         int c = 0;
         int arr[10];
         memset(arr, 0, sizeof(arr));
+
+        PreProcess(p, q);
         Search(p, q, a, n, c, 0, a, arr);
         cout << c << endl;
     }
